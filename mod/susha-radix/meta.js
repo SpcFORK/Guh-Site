@@ -37,10 +37,13 @@ async function createIcon(blob) {
     .att$('alt', 'icon')
     .style$({
       'background-image': `url(data:image/svg+xml;base64,${base64})`,
-      width: '15px',
-      height: '15px',
+      'background-size': 'contain',
+      'background-repeat': 'no-repeat',
+      'background-position': 'center',
+      width: '30px',
+      'aspest-ratio': '1',
       'vertical-align': '-.125em',
-      display: 'inline-block'
+      
     })
 
   return icon;
@@ -386,19 +389,30 @@ window.Radix_META = class Radix_META {
 
   constructor(loc = './') {
     this.buffers = {}
-    
+
+    if (location.toString().includes('replit.dev')) {
+      console.error('Susha Radix is not supported on Replit.dev, please deploy.')
+      this.loaded = true
+    }
+
     this.loaded = new Promise(resolve => {
       [...Radix_META.struct].map(async (name_, i) => {
         // split at first '.'
         const [name, ext] = name_.split('.')
 
-        this.buffers[name] = await getIcon(name, loc)
-        this[name] = async () => await createIcon(this.buffers[name])
-        
+        if (!this.loaded) {
+          this.buffers[name] = await getIcon(name, loc)
+          this[name] = async () => await createIcon(this.buffers[name])
+        } else {
+          this[name] = () => {
+            return window?.i?.()
+          }
+        }
+
         if (i === Radix_META.struct.length - 1) resolve()
       })
     })
 
-    .then(_ => this.loaded = true)
+      .then(_ => this.loaded = true)
   }
 }
